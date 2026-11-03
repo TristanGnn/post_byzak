@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Articles – Post_byZak</title>
 <style>
-/* Layout : page liste — barre titre en pilule, retour accueil, titre + filtres par catégorie, grille de tous les articles (3/2/1 colonnes), footer, pub fixe */
+/* Layout : page liste — titre + filtres par catégorie, grille de tous les articles (3/2/1 colonnes), footer, pub fixe */
 :root {
   --bg: #ffffff;
   --fg: #111111;
@@ -37,15 +37,8 @@ img { max-width: 100%; }
 a { color: var(--fg); }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
 
-/* Header */
-header .wrap { padding-block: 20px 8px; }
-.pill { display: block; background: var(--grey); border-radius: 999px; text-align: center; font-size: 1.6rem; padding: 8px 16px; text-decoration: none; }
-.retour { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 0.95rem; text-decoration: none; }
-.retour svg { width: 18px; height: 14px; }
-.retour:hover { text-decoration: underline; }
-
 /* Liste */
-main .wrap { display: grid; gap: 24px; padding-block: 24px 160px; }
+main .wrap { display: grid; gap: 24px; padding-block: 40px 160px; }
 h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.2rem); text-align: center; }
 .filtres { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .filtre {
@@ -89,22 +82,11 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
 @media (max-width: 900px) { .grille { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) {
   .grille { grid-template-columns: 1fr; }
-  .pill { font-size: 1.2rem; }
 }
 @media (prefers-reduced-motion: reduce) { .article { transition: none; } }
 </style>
 </head>
 <body>
-
-<header>
-  <div class="wrap">
-    <a class="pill" href="index.html">Post_byZak.com</a>
-    <a class="retour" href="index.html">
-      <svg viewBox="0 0 22 16" fill="currentColor" aria-hidden="true"><path d="M22 6H7V0L0 8l7 8v-6h15z"/></svg>
-      Retour à l'accueil
-    </a>
-  </div>
-</header>
 
 <main>
   <div class="wrap">
