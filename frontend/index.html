@@ -74,29 +74,6 @@ main .wrap { display: grid; gap: 80px; }
 .section { display: grid; gap: 28px; scroll-margin-top: 16px; }
 .section h2.titre { margin: 0; font-size: clamp(1.6rem, 4vw, 2.2rem); text-align: center; }
 
-/* Référendum */
-.sondage {
-  width: min(100%, 620px); justify-self: center;
-  border: 2px solid var(--line); border-radius: 28px; padding: 24px;
-  display: grid; gap: 16px;
-}
-.question { margin: 0; font-size: 1.15rem; font-weight: 600; text-align: center; text-wrap: balance; }
-.choix { display: grid; gap: 10px; border: 0; margin: 0; padding: 0; }
-.choix label {
-  position: relative; display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  border: 2px solid var(--line); border-radius: 999px; padding: 12px 18px; cursor: pointer; overflow: hidden;
-}
-.choix label:has(input:checked) { border-color: var(--fg); }
-.choix input { position: absolute; opacity: 0; pointer-events: none; }
-.choix label:has(input:focus-visible) { outline: 2px solid var(--fg); outline-offset: 2px; }
-.barre { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--grey); z-index: 0; transition: width 0.4s ease; }
-.choix .nom, .choix .pct { position: relative; z-index: 1; }
-.pct { font-variant-numeric: tabular-nums; font-weight: 600; }
-.sondage:not(.vote) .pct { visibility: hidden; }
-.voter { justify-self: center; border: 0; cursor: pointer; font: inherit; }
-.voter:disabled { opacity: 0.5; cursor: default; }
-.info { margin: 0; text-align: center; font-size: 0.85rem; color: var(--muted); }
-
 /* Photos */
 .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .photo { position: relative; border-radius: 20px; overflow: hidden; background: var(--grey); aspect-ratio: 4/5; max-width: 100%; }
@@ -142,7 +119,7 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
   .pill { font-size: 1.2rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .article, .btn svg, .barre { transition: none; }
+  .article, .btn svg { transition: none; }
 }
 </style>
 </head>
@@ -197,20 +174,6 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
       </div>
     </section>
 
-    <section class="section" id="referendum" aria-labelledby="t-referendum">
-      <h2 class="titre" id="t-referendum">Référendum</h2>
-      <form class="sondage" id="sondage">
-        <p class="question" id="q-sondage">Quelle course veux-tu voir couverte le week-end prochain ?</p>
-        <fieldset class="choix" aria-labelledby="q-sondage">
-          <label><input type="radio" name="vote" id="vote-1" value="0"><span class="barre"></span><span class="nom">Cyclo-cross de Libramont</span><span class="pct">0 %</span></label>
-          <label><input type="radio" name="vote" id="vote-2" value="1"><span class="barre"></span><span class="nom">Course sur route régionale</span><span class="pct">0 %</span></label>
-          <label><input type="radio" name="vote" id="vote-3" value="2"><span class="barre"></span><span class="nom">Manche de VTT</span><span class="pct">0 %</span></label>
-        </fieldset>
-        <button class="btn voter" type="submit" id="btn-voter" disabled>Voter</button>
-        <p class="info" id="info-sondage">Choisis une réponse puis clique sur Voter.</p>
-      </form>
-    </section>
-
     <section class="section" id="photos" aria-labelledby="t-photos">
       <h2 class="titre" id="t-photos">Photos des derniers événements</h2>
       <div class="photos">
@@ -260,53 +223,6 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
 </footer>
 
 <div class="pub"><div>Bannière publicitaire</div></div>
-
-<script>
-// Référendum : votes enregistrés seulement dans ce navigateur, en attendant un backend.
-(function () {
-  var form = document.getElementById('sondage');
-  var bouton = document.getElementById('btn-voter');
-  var info = document.getElementById('info-sondage');
-  var radios = form.querySelectorAll('input[name="vote"]');
-  var votes = [12, 7, 5]; // chiffres d'exemple
-
-  function afficher() {
-    var total = votes.reduce(function (a, b) { return a + b; }, 0);
-    form.querySelectorAll('.choix label').forEach(function (label, i) {
-      var pct = total ? Math.round(votes[i] / total * 100) : 0;
-      label.querySelector('.barre').style.width = pct + '%';
-      label.querySelector('.pct').textContent = pct + ' %';
-    });
-    form.classList.add('vote');
-    radios.forEach(function (r) { r.disabled = true; });
-    bouton.disabled = true;
-    bouton.textContent = 'Merci !';
-    info.textContent = total + ' votes (chiffres d\'exemple tant que le site n\'a pas de serveur).';
-  }
-
-  radios.forEach(function (r) {
-    r.addEventListener('change', function () { bouton.disabled = false; });
-  });
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var choisi = form.querySelector('input[name="vote"]:checked');
-    if (!choisi) return;
-    votes[Number(choisi.value)] += 1;
-    try { localStorage.setItem('pbz-vote', choisi.value); } catch (err) {}
-    afficher();
-  });
-
-  try {
-    var deja = localStorage.getItem('pbz-vote');
-    if (deja !== null) {
-      votes[Number(deja)] += 1;
-      radios[Number(deja)].checked = true;
-      afficher();
-    }
-  } catch (err) {}
-})();
-</script>
 
 </body>
 </html>
