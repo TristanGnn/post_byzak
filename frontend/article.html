@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Article – Post_byZak</title>
+<style>
+/* Layout : page article — colonne de lecture centrée : titre, chapô, auteur, dates, image + légende, partage, texte avec intertitres, footer, pub fixe */
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #666666;
+  --grey: #c4c4c4;
+  --soft: #f1f1f1;
+  --line: #cfcfcf;
+  --pub: #1f2a36;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --pub: #0e151c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --pub: #0e151c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 17px; }
+img { max-width: 100%; }
+.wrap {
+  max-width: 720px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: var(--fg); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+main .wrap { display: grid; gap: 20px; padding-block: 40px 160px; }
+
+/* En-tête de l'article */
+.cat { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; }
+h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.4rem); line-height: 1.15; text-wrap: balance; }
+.chapo { margin: 0; font-size: 1.2rem; line-height: 1.45; color: var(--muted); }
+
+.auteur { display: flex; align-items: center; gap: 14px; }
+.avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--grey); flex: none; }
+.auteur-info { display: grid; gap: 6px; }
+.auteur-nom { font-weight: 600; }
+.auteur-nom span { font-weight: 400; color: var(--muted); border-left: 1px solid var(--line); margin-left: 8px; padding-left: 8px; }
+.reseaux { display: flex; gap: 6px; }
+.reseaux span { width: 24px; height: 24px; border-radius: 6px; background: var(--fg); }
+
+.meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.partager {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  font: inherit; font-size: 0.9rem; color: var(--fg); background: var(--soft);
+  border: 2px solid var(--line); border-radius: 999px; padding: 8px 16px;
+}
+.partager:hover { border-color: var(--fg); }
+.partager svg { width: 16px; height: 16px; }
+
+/* Image */
+figure { margin: 0; display: grid; gap: 8px; }
+.couverture { background: var(--grey); aspect-ratio: 3/2; border-radius: 12px; max-width: 100%; }
+figcaption { font-size: 0.85rem; font-style: italic; color: var(--muted); line-height: 1.4; }
+
+/* Texte */
+.contenu { display: grid; gap: 18px; line-height: 1.65; margin-top: 8px; }
+.contenu p { margin: 0; }
+.contenu h2 { margin: 12px 0 0; font-size: 1.2rem; line-height: 1.35; }
+.contenu blockquote { margin: 0; padding-left: 16px; border-left: 4px solid var(--fg); font-size: 1.15rem; font-style: italic; }
+
+/* Footer */
+footer { border-top: 1px solid var(--line); }
+footer .wrap { max-width: 1080px; padding-block: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 0.85rem; }
+
+/* Pub */
+.pub {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: var(--pub); color: #ffffff;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.pub div { height: 80px; display: grid; place-items: center; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<main>
+  <div class="wrap">
+    <article>
+      <div style="display:grid;gap:20px">
+        <a class="cat" href="articles.html">Cyclo-cross</a>
+        <h1>Titre de l'article, écrit sur une ou deux lignes</h1>
+        <p class="chapo">Le chapô : un résumé de une ou deux phrases qui dit l'essentiel de l'article et donne envie de lire la suite.</p>
+
+        <div class="auteur">
+          <div class="avatar" aria-hidden="true"></div>
+          <div class="auteur-info">
+            <div class="auteur-nom">Nom de l'auteur<span>Rédacteur</span></div>
+            <div class="reseaux" aria-hidden="true"><span></span><span></span></div>
+          </div>
+        </div>
+
+        <div class="meta">
+          <span>Publié le 03-11-2026 à 18h30 · Mis à jour le 03-11-2026 à 19h05</span>
+          <button class="partager" type="button" id="btn-partager">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" stroke="currentColor" stroke-width="2"/></svg>
+            <span id="txt-partager">Partager</span>
+          </button>
+        </div>
+
+        <figure>
+          <div class="couverture"></div>
+          <figcaption>Légende de la photo : ce qu'on voit, où et quand. ©Nom du photographe</figcaption>
+        </figure>
+
+        <div class="contenu">
+          <h2>Un intertitre en gras pour structurer l'article, ou une question en format interview ?</h2>
+          <p>Premier paragraphe du texte. Zak l'écrit dans l'éditeur de la page admin, avec du gras, de l'italique, des liens et des intertitres. Le site l'affiche toujours avec ce même style.</p>
+          <p>Deuxième paragraphe. La colonne de lecture fait environ 70 caractères de large pour que le texte reste confortable à lire sur ordinateur comme sur téléphone.</p>
+          <blockquote>Une citation mise en avant, pour les phrases fortes d'un coureur ou d'un organisateur.</blockquote>
+          <h2>Un deuxième intertitre</h2>
+          <p>Suite de l'article. Des images peuvent aussi être ajoutées au milieu du texte depuis l'éditeur.</p>
+        </div>
+      </div>
+    </article>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Post_byZak</span>
+    <span>Instagram · TikTok · YouTube · Contact</span>
+  </div>
+</footer>
+
+<div class="pub"><div>Bannière publicitaire</div></div>
+
+<script>
+// Bouton Partager : copie le lien de l'article.
+(function () {
+  var btn = document.getElementById('btn-partager');
+  var txt = document.getElementById('txt-partager');
+  btn.addEventListener('click', function () {
+    var url = location.href;
+    function ok() { txt.textContent = 'Lien copié'; setTimeout(function () { txt.textContent = 'Partager'; }, 2000); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(ok, function () { txt.textContent = url; });
+    } else {
+      txt.textContent = url;
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
