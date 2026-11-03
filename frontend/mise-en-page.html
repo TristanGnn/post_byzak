@@ -74,7 +74,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; background: var(--bg);
 }
-.dispo-item[draggable="true"] { cursor: grab; }
+.dispo-item { cursor: grab; }
+.dispo-item:hover { border-color: var(--fg); }
 .dispo-texte { display: grid; gap: 2px; min-width: 0; }
 .dispo-texte span { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .dispo-texte strong { font-size: 0.9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -91,7 +92,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: minmax(120px, auto); gap: 16px;
   border: 2px dashed var(--line); border-radius: 20px; padding: 16px; min-height: 260px;
 }
-.zone.cible { border-color: var(--fg); background: var(--soft); }
+.zone.cible, .zone:has(.fantome) { border-color: var(--fg); background: var(--soft); }
 .zone-vide { grid-column: 1 / -1; display: grid; place-items: center; color: var(--muted); text-align: center; padding: 40px 16px; }
 
 /* Cartes (mêmes formats que sur le site) */
@@ -100,9 +101,14 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   background: var(--soft); border: 2px solid var(--line); border-radius: 22px; overflow: hidden;
   cursor: grab;
 }
-.carte.drag { opacity: 0.35; }
-.carte.avant { box-shadow: -6px 0 0 0 var(--fg); }
-.carte.apres { box-shadow: 6px 0 0 0 var(--fg); }
+.carte:hover { border-color: var(--fg); }
+.carte.fantome { opacity: 1; background: transparent; border: 2px dashed var(--fg); }
+.carte.fantome > * { visibility: hidden; }
+.carte.prise { cursor: grabbing; transform: rotate(1.5deg); box-shadow: 0 12px 30px rgba(0,0,0,0.25); }
+.poignee { position: absolute; top: 8px; left: 8px; z-index: 2; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-size: 1rem; line-height: 1; }
+.carte:hover .poignee { color: var(--fg); border-color: var(--fg); }
+.zone .dispo-item { grid-column: span 2; }
+body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
 .c-texte { display: grid; gap: 6px; align-content: start; padding: 14px 16px 16px; }
 .c-cat { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .c-titre { margin: 0; font-size: 1.05rem; line-height: 1.25; text-wrap: balance; }
@@ -201,6 +207,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
 <script>
 // Gestionnaire de mise en page de l'accueil.
 // Pour l'instant : articles d'exemple et mise en page gardée dans ce navigateur.
@@ -268,8 +275,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   function carte(item, i) {
     var a = parId(item.id);
     var c = el('article', 'carte f-' + item.format);
-    c.draggable = true;
-    c.dataset.index = i;
 
     var t = el('div', 'c-texte');
     if (item.format === 'urgent') t.appendChild(el('span', 'badge', 'Urgent'));
@@ -301,33 +306,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     [avant, apres, sel, x].forEach(function (b) { o.appendChild(b); });
     c.appendChild(o);
 
-    // Glisser-déposer entre cartes
-    c.addEventListener('dragstart', function (e) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', 'z:' + i);
-      c.classList.add('drag');
-    });
-    c.addEventListener('dragend', function () { c.classList.remove('drag'); nettoyerMarques(); });
-    c.addEventListener('dragover', function (e) {
-      e.preventDefault();
-      var r = c.getBoundingClientRect();
-      var gauche = (e.clientX - r.left) < r.width / 2;
-      nettoyerMarques();
-      c.classList.add(gauche ? 'avant' : 'apres');
-    });
-    c.addEventListener('dragleave', function () { c.classList.remove('avant', 'apres'); });
-    c.addEventListener('drop', function (e) {
-      e.preventDefault(); e.stopPropagation();
-      var r = c.getBoundingClientRect();
-      var cible = (e.clientX - r.left) < r.width / 2 ? i : i + 1;
-      deposer(e.dataTransfer.getData('text/plain'), cible);
-    });
+    c.dataset.id = item.id;
+    c.insertBefore(el('span', 'poignee', '⠿'), c.firstChild);
     return c;
-  }
-
-  function nettoyerMarques() {
-    document.querySelectorAll('.carte.avant, .carte.apres').forEach(function (c) { c.classList.remove('avant', 'apres'); });
-    $('zone').classList.remove('cible');
   }
 
   function deplacer(de, vers) {
@@ -337,21 +318,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     trier(); rendre(); modifie();
   }
 
-  function deposer(donnee, cible) {
-    nettoyerMarques();
-    if (!donnee) return;
-    if (donnee.indexOf('z:') === 0) {
-      var de = Number(donnee.slice(2));
-      var x = layout.splice(de, 1)[0];
-      if (cible > de) cible--;
-      layout.splice(cible, 0, x);
-    } else if (donnee.indexOf('d:') === 0) {
-      var id = donnee.slice(2);
-      if (layout.some(function (y) { return y.id === id; })) return;
-      layout.splice(cible, 0, { id: id, format: 'normal' });
-    }
-    trier(); rendre(); modifie();
-  }
 
   function rendre() {
     var zone = $('zone');
@@ -367,7 +333,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     if (!dispo.length) liste.appendChild(el('li', 'vide-liste', 'Tous les articles sont sur l’accueil.'));
     dispo.forEach(function (a) {
       var li = el('li', 'dispo-item');
-      li.draggable = true;
+      li.dataset.id = a.id;
       var t = el('div', 'dispo-texte');
       t.appendChild(el('span', null, a.cat));
       t.appendChild(el('strong', null, a.titre));
@@ -375,16 +341,52 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
       b.type = 'button'; b.title = "Ajouter à l'accueil"; b.setAttribute('aria-label', 'Ajouter ' + a.titre + " à l'accueil");
       b.onclick = function () { layout.push({ id: a.id, format: 'normal' }); trier(); rendre(); modifie(); };
       li.appendChild(t); li.appendChild(b);
-      li.addEventListener('dragstart', function (e) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'd:' + a.id); });
       liste.appendChild(li);
     });
   }
 
-  // Dépôt dans la zone vide (fin de liste)
-  var zone = $('zone');
-  zone.addEventListener('dragover', function (e) { e.preventDefault(); zone.classList.add('cible'); });
-  zone.addEventListener('dragleave', function (e) { if (e.target === zone) zone.classList.remove('cible'); });
-  zone.addEventListener('drop', function (e) { e.preventDefault(); deposer(e.dataTransfer.getData('text/plain'), layout.length); });
+  // Glisser-déposer (souris et tactile) avec SortableJS
+  var options = {
+    animation: 180,
+    easing: 'cubic-bezier(0.2, 0, 0, 1)',
+    forceFallback: true,
+    fallbackTolerance: 4,
+    ghostClass: 'fantome',
+    dragClass: 'prise',
+    filter: '.outils, .ajouter',
+    preventOnFilter: false,
+    scroll: true,
+    scrollSensitivity: 120,
+    scrollSpeed: 14,
+    onStart: function () { document.body.classList.add('glisse'); },
+    onEnd: function () { document.body.classList.remove('glisse'); }
+  };
+
+  Sortable.create($('zone'), Object.assign({}, options, {
+    group: { name: 'accueil', pull: false, put: true },
+    draggable: '.carte',
+    onEnd: function (e) {
+      document.body.classList.remove('glisse');
+      if (e.oldIndex === e.newIndex) return;
+      var x = layout.splice(e.oldIndex, 1)[0];
+      layout.splice(e.newIndex, 0, x);
+      trier(); rendre(); modifie();
+    },
+    onAdd: function (e) {
+      var id = e.item.dataset.id;
+      e.item.remove();
+      if (!layout.some(function (y) { return y.id === id; })) {
+        layout.splice(Math.min(e.newIndex, layout.length), 0, { id: id, format: 'normal' });
+      }
+      trier(); rendre(); modifie();
+    }
+  }));
+
+  Sortable.create($('dispo'), Object.assign({}, options, {
+    group: { name: 'accueil', pull: true, put: false },
+    sort: false,
+    draggable: '.dispo-item'
+  }));
 
   // Aperçu ordi / téléphone
   function vue(tel) {
