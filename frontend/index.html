@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Post_byZak</title>
 <style>
-/* Layout : single page — barre titre en pilule, "Derniers articles" (3 sur ordi, 1 sur téléphone), bouton "Voir + d'articles", footer, pub fixe */
+/* Layout : single page — "Derniers articles" (3 sur ordi, 1 sur téléphone), bouton "Voir + d'articles", footer, pub fixe */
 :root {
   --bg: #ffffff;
   --fg: #111111;
@@ -36,10 +36,6 @@ img { max-width: 100%; }
 }
 a { color: var(--fg); }
 a:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
-
-/* Header */
-header .wrap { padding-block: 20px 8px; }
-.pill { display: block; background: var(--grey); border-radius: 999px; text-align: center; font-size: 1.6rem; padding: 8px 16px; text-decoration: none; }
 
 /* Derniers articles */
 main .wrap { padding-block: 40px 160px; }
@@ -135,7 +131,6 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
   .shop { grid-template-columns: 1fr; }
   .evt { gap: 12px; padding: 12px 14px; }
   .jour { width: 54px; }
-  .pill { font-size: 1.2rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .article, .btn svg { transition: none; }
@@ -143,12 +138,6 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
 </style>
 </head>
 <body>
-
-<header>
-  <div class="wrap">
-    <a class="pill" href="#">Post_byZak.com</a>
-  </div>
-</header>
 
 <main>
   <div class="wrap">
