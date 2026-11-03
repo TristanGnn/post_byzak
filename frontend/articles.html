@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Articles – Post_byZak</title>
+<style>
+/* Layout : page liste — barre titre en pilule, retour accueil, titre + filtres par catégorie, grille de tous les articles (3/2/1 colonnes), footer, pub fixe */
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #666666;
+  --grey: #c4c4c4;
+  --soft: #f1f1f1;
+  --line: #cfcfcf;
+  --pub: #1f2a36;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --pub: #0e151c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --pub: #0e151c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; }
+img { max-width: 100%; }
+.wrap {
+  max-width: 1080px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: var(--fg); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+/* Header */
+header .wrap { padding-block: 20px 8px; }
+.pill { display: block; background: var(--grey); border-radius: 999px; text-align: center; font-size: 1.6rem; padding: 8px 16px; text-decoration: none; }
+.retour { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 0.95rem; text-decoration: none; }
+.retour svg { width: 18px; height: 14px; }
+.retour:hover { text-decoration: underline; }
+
+/* Liste */
+main .wrap { display: grid; gap: 24px; padding-block: 24px 160px; }
+h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.2rem); text-align: center; }
+.filtres { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.filtre {
+  font: inherit; font-size: 0.9rem; cursor: pointer; color: var(--fg); background: transparent;
+  border: 2px solid var(--line); border-radius: 999px; padding: 6px 16px;
+}
+.filtre:hover { border-color: var(--fg); }
+.filtre[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.compte { margin: 0; text-align: center; color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+
+.grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.article {
+  display: grid; grid-template-rows: auto 1fr; min-width: 0;
+  background: var(--soft); border: 2px solid var(--line); border-radius: 28px;
+  overflow: hidden; text-decoration: none; color: var(--fg);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.article:hover { transform: translateY(-3px); border-color: var(--fg); }
+.img { background: var(--grey); aspect-ratio: 4/3; max-width: 100%; }
+.texte { display: grid; gap: 8px; align-content: start; padding: 16px 20px 22px; }
+.cat { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.article h2 { margin: 0; font-size: 1.2rem; line-height: 1.25; text-wrap: balance; }
+.article p { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+.date { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.vide { margin: 0; text-align: center; color: var(--muted); padding-block: 40px; }
+
+/* Footer */
+footer { border-top: 1px solid var(--line); }
+footer .wrap { padding-block: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 0.85rem; }
+
+/* Pub */
+.pub {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: var(--pub); color: #ffffff;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.pub div { height: 80px; display: grid; place-items: center; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+
+@media (max-width: 900px) { .grille { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) {
+  .grille { grid-template-columns: 1fr; }
+  .pill { font-size: 1.2rem; }
+}
+@media (prefers-reduced-motion: reduce) { .article { transition: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="pill" href="index.html">Post_byZak.com</a>
+    <a class="retour" href="index.html">
+      <svg viewBox="0 0 22 16" fill="currentColor" aria-hidden="true"><path d="M22 6H7V0L0 8l7 8v-6h15z"/></svg>
+      Retour à l'accueil
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1>Tous les articles</h1>
+
+    <div class="filtres" role="group" aria-label="Filtrer par catégorie">
+      <button class="filtre" type="button" data-cat="tout" aria-pressed="true">Tout</button>
+      <button class="filtre" type="button" data-cat="cyclo-cross" aria-pressed="false">Cyclo-cross</button>
+      <button class="filtre" type="button" data-cat="route" aria-pressed="false">Route</button>
+      <button class="filtre" type="button" data-cat="vtt" aria-pressed="false">VTT</button>
+      <button class="filtre" type="button" data-cat="portrait" aria-pressed="false">Portrait</button>
+    </div>
+    <p class="compte" id="compte" aria-live="polite">9 articles</p>
+
+    <div class="grille" id="grille">
+      <a class="article" href="#" data-cat="cyclo-cross">
+        <div class="img"></div>
+        <div class="texte"><span class="cat">Cyclo-cross</span><h2>Titre de l'article</h2><p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p><span class="date">3 nov. 2026</span></div>
+      </a>
+      <a class="article" href="#" data-cat="route">
+        <div class="img"></div>
+        <div class="texte"><span class="cat">Route</span><h2>Titre de l'article</h2><p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p><span class="date">1 nov. 2026</span></div>
+      </a>
+      <a class="article" href="#" data-cat="portrait">
+        <div class="img"></div>
+        <div class="texte"><span class="cat">Portrait</span><h2>Titre de l'article</h2><p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p><span class="date">29 oct. 2026</span></div>
+      </a>
+      <a class="article" href="#" data-cat="cyclo-cross">
+        <div class="img"></div>
+        <div class="texte"><span class="cat">Cyclo-cross</span><h2>Titre de l'article</h2><p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p><span class="date">26 oct. 2026</span></div>
+      </a>
+      <a class="article" href="#" data-cat="vtt">
+        <div class="img"></div>
+        <div class="texte"><span class="cat">VTT</span><h2>Titre de l'article</h2><p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p><span class="date">22 oct. 2026</span></div>
+      </a>
+      <a class="article" href="#" data-cat="route">
+        <div class="img"></div>
+        <div class="texte"><span class="cat">Route</span><h2>Titre de l'article</h2><p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p><span class="date">18 oct. 2026</span></div>
+      </a>
+      <a class="article" href="#" data-cat="cyclo-cross">
+        <div class="img"></div>
+        <div class="texte"><span class="cat">Cyclo-cross</span><h2>Titre de l'article</h2><p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p><span class="date">12 oct. 2026</span></div>
+      </a>
+      <a class="article" href="#" data-cat="portrait">
+        <div class="img"></div>
+        <div class="texte"><span class="cat">Portrait</span><h2>Titre de l'article</h2><p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p><span class="date">5 oct. 2026</span></div>
+      </a>
+      <a class="article" href="#" data-cat="vtt">
+        <div class="img"></div>
+        <div class="texte"><span class="cat">VTT</span><h2>Titre de l'article</h2><p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p><span class="date">28 sept. 2026</span></div>
+      </a>
+    </div>
+    <p class="vide" id="vide" hidden>Aucun article dans cette catégorie pour l'instant.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Post_byZak</span>
+    <span>Instagram · TikTok · YouTube · Contact</span>
+  </div>
+</footer>
+
+<div class="pub"><div>Bannière publicitaire</div></div>
+
+<script>
+// Filtre les articles par catégorie.
+(function () {
+  var boutons = document.querySelectorAll('.filtre');
+  var articles = document.querySelectorAll('#grille .article');
+  var compte = document.getElementById('compte');
+  var vide = document.getElementById('vide');
+
+  function filtrer(cat) {
+    var n = 0;
+    articles.forEach(function (a) {
+      var ok = cat === 'tout' || a.dataset.cat === cat;
+      a.hidden = !ok;
+      if (ok) n++;
+    });
+    compte.textContent = n + (n > 1 ? ' articles' : ' article');
+    vide.hidden = n > 0;
+    boutons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.cat === cat)); });
+  }
+
+  boutons.forEach(function (b) {
+    b.addEventListener('click', function () { filtrer(b.dataset.cat); });
+  });
+})();
+</script>
+
+</body>
+</html>
