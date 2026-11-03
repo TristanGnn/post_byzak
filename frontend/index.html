@@ -5,81 +5,69 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Post_byZak</title>
 <style>
-/* Layout : page d'accueil wireframe — barre titre en pilule + menu, intro, 4 blocs d'aperçu (articles, photos, shop, design), footer, pub fixe */
+/* Layout : single page — barre titre en pilule, "Derniers articles" (3 sur ordi, 1 sur téléphone), bouton "Voir + d'articles", footer, pub fixe */
 :root {
   --bg: #ffffff;
   --fg: #111111;
   --muted: #666666;
   --grey: #c4c4c4;
-  --soft: #ececec;
+  --soft: #f1f1f1;
   --line: #cfcfcf;
   --pub: #1f2a36;
   --font: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #222222; --line: #444444; --pub: #0e151c;
+    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --pub: #0e151c;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #222222; --line: #444444; --pub: #0e151c;
+  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --pub: #0e151c;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; }
 img { max-width: 100%; }
 .wrap {
-  max-width: 960px; margin: 0 auto;
+  max-width: 1080px; margin: 0 auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 a { color: var(--fg); }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
 
 /* Header */
 header .wrap { padding-block: 20px 8px; }
 .pill { display: block; background: var(--grey); border-radius: 999px; text-align: center; font-size: 1.6rem; padding: 8px 16px; text-decoration: none; }
-nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-nav a { text-decoration: none; font-size: 0.9rem; border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; }
-nav a:hover { background: var(--grey); }
-nav a[aria-current="page"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
-/* Intro */
-.intro { display: grid; justify-items: center; text-align: center; gap: 14px; padding-block: 48px 16px; }
-.intro h1 { margin: 0; font-size: clamp(1.8rem, 5vw, 2.8rem); text-wrap: balance; }
-.intro p { margin: 0; color: var(--muted); max-width: 48ch; line-height: 1.5; }
-.btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
-.btn { text-decoration: none; border-radius: 999px; padding: 10px 22px; border: 2px solid var(--fg); font-weight: 600; }
-.btn.plein { background: var(--fg); color: var(--bg); }
+/* Derniers articles */
+main .wrap { padding-block: 40px 160px; }
+.articles { display: grid; gap: 28px; }
+.articles h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.2rem); text-align: center; }
+.grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.article {
+  display: grid; grid-template-rows: auto 1fr; min-width: 0;
+  background: var(--soft); border: 2px solid var(--line); border-radius: 28px;
+  overflow: hidden; text-decoration: none; color: var(--fg);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.article:hover { transform: translateY(-3px); border-color: var(--fg); }
+.img { background: var(--grey); aspect-ratio: 4/3; max-width: 100%; }
+.texte { display: grid; gap: 8px; align-content: start; padding: 16px 20px 22px; }
+.cat { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.article h2 { margin: 0; font-size: 1.2rem; line-height: 1.25; text-wrap: balance; }
+.article p { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+.date { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-/* Blocs */
-main .wrap { display: grid; gap: 56px; padding-block: 32px 160px; }
-.bloc { display: grid; gap: 16px; }
-.bloc-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 2px solid var(--fg); padding-bottom: 6px; }
-.bloc-tete h2 { margin: 0; font-size: 1.3rem; }
-.bloc-tete a { font-size: 0.9rem; }
-.ph { background: var(--grey); border-radius: 8px; max-width: 100%; }
-
-.une { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: center; }
-.une .ph { aspect-ratio: 16/10; }
-.une h3 { margin: 0 0 8px; font-size: 1.4rem; text-wrap: balance; }
-.une p { margin: 0; color: var(--muted); line-height: 1.5; }
-
-.trois { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.carte { background: var(--soft); border-radius: 20px; padding: 10px 12px 14px; display: grid; gap: 8px; text-align: center; min-width: 0; }
-.carte .ph { aspect-ratio: 3/4; }
-
-.deux { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.produit { border: 2px solid var(--line); border-radius: 28px; padding: 20px; display: grid; gap: 12px; }
-.vestes { display: flex; gap: 10px; justify-content: center; }
-.veste { width: 40%; aspect-ratio: 3/4; border-radius: 30% 30% 8px 8px; background: var(--fg); }
-.produit-info { display: flex; justify-content: space-between; gap: 8px; font-size: 0.95rem; }
-.produit-info a { font-weight: 600; }
-
-.design { display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; align-items: center; }
-.design .ph { aspect-ratio: 9/14; max-height: 360px; justify-self: center; width: 70%; }
-.design p { margin: 0 0 16px; color: var(--muted); line-height: 1.5; }
+.voir-plus { display: grid; justify-items: center; margin-top: 8px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: var(--fg); color: var(--bg); text-decoration: none; font-weight: 600; font-size: 1.05rem;
+  border-radius: 999px; padding: 14px 28px;
+}
+.btn svg { width: 22px; height: 16px; transition: transform 0.15s ease; }
+.btn:hover svg { transform: translateX(4px); }
 
 /* Footer */
 footer { border-top: 1px solid var(--line); }
@@ -95,11 +83,14 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
 }
 .pub div { height: 80px; display: grid; place-items: center; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
 
-@media (max-width: 640px) {
-  .une, .design, .deux { grid-template-columns: 1fr; }
-  .trois { grid-template-columns: 1fr 1fr; }
-  .trois .carte:last-child { display: none; }
+/* Téléphone : 1 seul article */
+@media (max-width: 700px) {
+  .grille { grid-template-columns: 1fr; }
+  .grille .article:nth-child(n+2) { display: none; }
   .pill { font-size: 1.2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .article, .btn svg { transition: none; }
 }
 </style>
 </head>
@@ -107,75 +98,52 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
 
 <header>
   <div class="wrap">
-    <a class="pill" href="index.html">Post_byZak.com</a>
-    <nav>
-      <a href="index.html" aria-current="page">Accueil</a>
-      <a href="rubriques.html#articles">Articles</a>
-      <a href="rubriques.html#photos">Photos</a>
-      <a href="rubriques.html#shop">Shop</a>
-      <a href="rubriques.html#design">Design</a>
-      <a href="rubriques.html#equipe">Équipe</a>
-    </nav>
+    <a class="pill" href="#">Post_byZak.com</a>
   </div>
 </header>
 
 <main>
   <div class="wrap">
+    <section class="articles" id="articles" aria-labelledby="t-articles">
+      <h1 id="t-articles">Derniers articles</h1>
 
-    <section class="intro">
-      <h1>Le cyclisme local, en photos et en articles</h1>
-      <p>Courses, cyclo-cross et coureurs de la région. Photos, récits de course, vêtements et affiches sur mesure.</p>
-      <div class="btns">
-        <a class="btn plein" href="rubriques.html#articles">Lire les articles</a>
-        <a class="btn" href="rubriques.html#design">Demander un devis</a>
+      <div class="grille">
+        <a class="article" href="#">
+          <div class="img"></div>
+          <div class="texte">
+            <span class="cat">Cyclo-cross</span>
+            <h2>Titre de l'article le plus récent</h2>
+            <p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p>
+            <span class="date">3 nov. 2026</span>
+          </div>
+        </a>
+        <a class="article" href="#">
+          <div class="img"></div>
+          <div class="texte">
+            <span class="cat">Route</span>
+            <h2>Titre du deuxième article</h2>
+            <p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p>
+            <span class="date">1 nov. 2026</span>
+          </div>
+        </a>
+        <a class="article" href="#">
+          <div class="img"></div>
+          <div class="texte">
+            <span class="cat">Portrait</span>
+            <h2>Titre du troisième article</h2>
+            <p>Deux lignes de résumé pour donner envie de lire la suite de l'article.</p>
+            <span class="date">29 oct. 2026</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="voir-plus">
+        <a class="btn" href="#">
+          Voir + d'articles
+          <svg viewBox="0 0 22 16" fill="currentColor" aria-hidden="true"><path d="M0 6h15V0l7 8-7 8v-6H0z"/></svg>
+        </a>
       </div>
     </section>
-
-    <section class="bloc" aria-labelledby="t-articles">
-      <div class="bloc-tete"><h2 id="t-articles">Dernier article</h2><a href="rubriques.html#articles">Tous les articles</a></div>
-      <article class="une">
-        <div class="ph"></div>
-        <div>
-          <h3>Titre du dernier article</h3>
-          <p>Deux ou trois lignes de résumé pour donner envie de lire la suite.</p>
-        </div>
-      </article>
-    </section>
-
-    <section class="bloc" aria-labelledby="t-photos">
-      <div class="bloc-tete"><h2 id="t-photos">Photos</h2><a href="rubriques.html#photos">Voir plus</a></div>
-      <div class="trois">
-        <div class="carte">Cx Libramont<div class="ph"></div></div>
-        <div class="carte">Cx Libramont<div class="ph"></div></div>
-        <div class="carte">Cx Libramont<div class="ph"></div></div>
-      </div>
-    </section>
-
-    <section class="bloc" aria-labelledby="t-shop">
-      <div class="bloc-tete"><h2 id="t-shop">Shop</h2><a href="rubriques.html#shop">Tout le shop</a></div>
-      <div class="deux">
-        <div class="produit">
-          <div class="vestes"><div class="veste"></div><div class="veste"></div></div>
-          <div class="produit-info"><span>Veste Post_byZak</span><a href="rubriques.html#shop">Commander</a></div>
-        </div>
-        <div class="produit">
-          <div class="vestes"><div class="veste"></div><div class="veste"></div></div>
-          <div class="produit-info"><span>Veste Post_byZak</span><a href="rubriques.html#shop">Commander</a></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="bloc" aria-labelledby="t-design">
-      <div class="bloc-tete"><h2 id="t-design">Design</h2><a href="rubriques.html#design">Voir les réalisations</a></div>
-      <div class="design">
-        <div class="ph"></div>
-        <div>
-          <p>Affiches de coureurs, visuels de sponsors, maillots. Chaque création est faite sur mesure.</p>
-          <a class="btn plein" href="rubriques.html#design">Demander un devis</a>
-        </div>
-      </div>
-    </section>
-
   </div>
 </main>
 
