@@ -74,6 +74,23 @@ main .wrap { display: grid; gap: 80px; }
 .section { display: grid; gap: 28px; scroll-margin-top: 16px; }
 .section h2.titre { margin: 0; font-size: clamp(1.6rem, 4vw, 2.2rem); text-align: center; }
 
+/* Futurs événements */
+.agenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; width: min(100%, 820px); justify-self: center; }
+.evt {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 18px;
+  border: 2px solid var(--line); border-radius: 24px; padding: 14px 18px;
+}
+.jour {
+  display: grid; justify-items: center; width: 64px; padding-block: 6px;
+  background: var(--fg); color: var(--bg); border-radius: 16px; line-height: 1.1;
+}
+.jour strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.jour span { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.evt-texte { display: grid; gap: 4px; min-width: 0; }
+.evt-texte h3 { margin: 0; font-size: 1.1rem; }
+.evt-texte p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.evt .commander { white-space: nowrap; }
+
 /* Photos */
 .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .photo { position: relative; border-radius: 20px; overflow: hidden; background: var(--grey); aspect-ratio: 4/5; max-width: 100%; }
@@ -116,6 +133,8 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
   .grille .article:nth-child(n+2) { display: none; }
   .photos { grid-template-columns: 1fr 1fr; gap: 10px; }
   .shop { grid-template-columns: 1fr; }
+  .evt { gap: 12px; padding: 12px 14px; }
+  .jour { width: 54px; }
   .pill { font-size: 1.2rem; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -169,6 +188,33 @@ footer .wrap { padding-block: 20px; display: flex; justify-content: space-betwee
       <div class="voir-plus">
         <a class="btn" href="#">
           Voir + d'articles
+          <svg viewBox="0 0 22 16" fill="currentColor" aria-hidden="true"><path d="M0 6h15V0l7 8-7 8v-6H0z"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <section class="section" id="evenements" aria-labelledby="t-evenements">
+      <h2 class="titre" id="t-evenements">Futurs événements</h2>
+      <ul class="agenda">
+        <li class="evt">
+          <div class="jour"><strong>09</strong><span>nov.</span></div>
+          <div class="evt-texte"><h3>Nom de l'événement</h3><p>Cyclo-cross · Lieu</p></div>
+          <a class="commander" href="#evenements">Infos</a>
+        </li>
+        <li class="evt">
+          <div class="jour"><strong>16</strong><span>nov.</span></div>
+          <div class="evt-texte"><h3>Nom de l'événement</h3><p>Cyclo-cross · Lieu</p></div>
+          <a class="commander" href="#evenements">Infos</a>
+        </li>
+        <li class="evt">
+          <div class="jour"><strong>23</strong><span>nov.</span></div>
+          <div class="evt-texte"><h3>Nom de l'événement</h3><p>VTT · Lieu</p></div>
+          <a class="commander" href="#evenements">Infos</a>
+        </li>
+      </ul>
+      <div class="voir-plus">
+        <a class="btn" href="#evenements">
+          Voir tout le calendrier
           <svg viewBox="0 0 22 16" fill="currentColor" aria-hidden="true"><path d="M0 6h15V0l7 8-7 8v-6H0z"/></svg>
         </a>
       </div>
