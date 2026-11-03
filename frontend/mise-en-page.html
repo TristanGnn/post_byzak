@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Mise en page – Post_byZak</title>
+<style>
+/* Layout : gestionnaire de mise en page de l'accueil — barre d'actions, colonne "Articles disponibles", grande zone = grille 6 colonnes de l'accueil avec aperçu ordi / téléphone */
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #666666;
+  --grey: #c4c4c4;
+  --soft: #f1f1f1;
+  --line: #cfcfcf;
+  --urgent: #c8161d;
+  --ok: #1e7a46;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --urgent: #ff4d55; --ok: #5cc98a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --urgent: #ff4d55; --ok: #5cc98a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+/* Barre du haut */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 11; background: var(--bg); }
+.barre { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+.barre-in {
+  max-width: 1500px; margin: 0 auto; padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.barre h1 { margin: 0; font-size: 1.1rem; }
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.etat { font-size: 0.85rem; color: var(--muted); }
+.etat.ok { color: var(--ok); }
+.btn {
+  font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  border-radius: 999px; padding: 8px 16px; border: 2px solid var(--fg); background: transparent; color: var(--fg);
+}
+.btn.plein { background: var(--fg); color: var(--bg); }
+.vue { display: inline-flex; border: 2px solid var(--line); border-radius: 999px; padding: 2px; }
+.vue button { font: inherit; font-size: 0.85rem; cursor: pointer; border: 0; background: transparent; color: var(--fg); border-radius: 999px; padding: 6px 12px; }
+.vue button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+
+/* Mise en page */
+.page {
+  max-width: 1500px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 24px; align-items: start;
+}
+.titre-col { margin: 0 0 10px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+
+/* Colonne articles disponibles */
+.dispo { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 68px); display: grid; gap: 14px; }
+.legende-formats { border: 2px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 6px; font-size: 0.85rem; }
+.legende-formats strong { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.legende-formats div { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); }
+.legende-formats b { color: var(--fg); font-weight: 600; }
+.liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 52vh; overflow: auto; }
+.dispo-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; background: var(--bg);
+}
+.dispo-item[draggable="true"] { cursor: grab; }
+.dispo-texte { display: grid; gap: 2px; min-width: 0; }
+.dispo-texte span { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.dispo-texte strong { font-size: 0.9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ajouter { font: inherit; font-size: 1.1rem; line-height: 1; cursor: pointer; width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--fg); background: transparent; color: var(--fg); }
+.ajouter:hover { background: var(--fg); color: var(--bg); }
+.vide-liste { color: var(--muted); font-size: 0.85rem; padding: 8px 2px; }
+
+/* Cadre d'aperçu */
+.cadre { display: grid; justify-items: center; }
+.ecran { width: 100%; max-width: 100%; transition: width 0.25s ease; container-type: inline-size; container-name: ecran; }
+.ecran.tel { width: 390px; border: 10px solid var(--fg); border-radius: 36px; padding: 16px 12px; }
+.zone-titre { margin: 0 0 16px; text-align: center; font-size: clamp(1.4rem, 3cqi, 2rem); }
+.zone {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: minmax(120px, auto); gap: 16px;
+  border: 2px dashed var(--line); border-radius: 20px; padding: 16px; min-height: 260px;
+}
+.zone.cible { border-color: var(--fg); background: var(--soft); }
+.zone-vide { grid-column: 1 / -1; display: grid; place-items: center; color: var(--muted); text-align: center; padding: 40px 16px; }
+
+/* Cartes (mêmes formats que sur le site) */
+.carte {
+  position: relative; display: grid; grid-template-rows: 1fr auto; min-width: 0;
+  background: var(--soft); border: 2px solid var(--line); border-radius: 22px; overflow: hidden;
+  cursor: grab;
+}
+.carte.drag { opacity: 0.35; }
+.carte.avant { box-shadow: -6px 0 0 0 var(--fg); }
+.carte.apres { box-shadow: 6px 0 0 0 var(--fg); }
+.c-texte { display: grid; gap: 6px; align-content: start; padding: 14px 16px 16px; }
+.c-cat { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.c-titre { margin: 0; font-size: 1.05rem; line-height: 1.25; text-wrap: balance; }
+.c-chapo { margin: 0; color: var(--muted); font-size: 0.85rem; line-height: 1.45; }
+.c-img { background: var(--grey); aspect-ratio: 4/3; }
+.badge { justify-self: start; background: var(--urgent); color: #ffffff; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 6px; padding: 3px 8px; }
+
+.f-normal   { grid-column: span 2; }
+.f-petit    { grid-column: span 2; grid-template-rows: 1fr; }
+.f-petit .c-img, .f-petit .c-chapo { display: none; }
+.f-vertical { grid-column: span 2; grid-row: span 2; }
+.f-vertical .c-img { aspect-ratio: auto; min-height: 260px; height: 100%; }
+.f-grand    { grid-column: span 4; grid-row: span 2; }
+.f-grand .c-titre { font-size: 1.6rem; }
+.f-grand .c-img { aspect-ratio: auto; min-height: 240px; height: 100%; }
+.f-urgent   { grid-column: 1 / -1; grid-template-rows: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-color: var(--urgent); }
+.f-urgent .c-texte { align-content: center; padding: 22px 24px; }
+.f-urgent .c-titre { font-size: 1.7rem; }
+.f-urgent .c-img { aspect-ratio: auto; min-height: 200px; }
+
+/* Commandes sur chaque carte */
+.outils {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  display: flex; gap: 4px; align-items: center;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px;
+}
+.outils select { font: inherit; font-size: 0.8rem; color: var(--fg); background: var(--bg); border: 0; border-radius: 999px; padding: 4px 6px; cursor: pointer; }
+.outils button { font: inherit; font-size: 0.85rem; line-height: 1; cursor: pointer; width: 26px; height: 26px; border: 0; border-radius: 50%; background: transparent; color: var(--fg); }
+.outils button:hover { background: var(--soft); }
+.outils button:disabled { opacity: 0.3; cursor: default; }
+.outils .retirer:hover { color: var(--urgent); }
+
+/* Aperçu téléphone : une seule colonne, même ordre */
+@container ecran (max-width: 600px) {
+  .zone { grid-template-columns: 1fr; padding: 10px; gap: 12px; }
+  .carte, .f-urgent { grid-column: 1 / -1; grid-row: auto; }
+  .f-urgent { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .f-vertical .c-img { min-height: 320px; }
+  .f-grand .c-img, .f-urgent .c-img { min-height: 0; aspect-ratio: 4/3; }
+  .f-grand .c-titre, .f-urgent .c-titre { font-size: 1.3rem; }
+  .outils select { max-width: 92px; }
+}
+
+@media (max-width: 900px) {
+  .page { grid-template-columns: 1fr; }
+  .dispo { position: static; }
+  .liste { max-height: none; }
+}
+@media (max-width: 440px) {
+  .ecran.tel { width: 100%; border-width: 6px; border-radius: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { .ecran { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="barre">
+  <div class="barre-in">
+    <h1>Mise en page de l'accueil</h1>
+    <div class="actions">
+      <div class="vue" role="group" aria-label="Aperçu">
+        <button type="button" id="vue-ordi" aria-pressed="true">Ordi</button>
+        <button type="button" id="vue-tel" aria-pressed="false">Téléphone</button>
+      </div>
+      <span class="etat" id="etat" aria-live="polite">Aucune modification</span>
+      <button class="btn" type="button" id="btn-annuler">Annuler</button>
+      <button class="btn plein" type="button" id="btn-publier">Publier la mise en page</button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <aside class="dispo" aria-labelledby="t-dispo">
+    <div>
+      <h2 class="titre-col" id="t-dispo">Articles disponibles</h2>
+      <ul class="liste" id="dispo"></ul>
+    </div>
+    <div class="legende-formats">
+      <strong>Formats</strong>
+      <div><b>Petit</b><span>1/3 · texte seul</span></div>
+      <div><b>Normal</b><span>1/3 · texte + photo</span></div>
+      <div><b>Vertical</b><span>1/3 · 2 rangées</span></div>
+      <div><b>Grand</b><span>2/3 · 2 rangées</span></div>
+      <div><b>Urgent</b><span>pleine largeur · en haut</span></div>
+    </div>
+  </aside>
+
+  <section aria-labelledby="t-zone">
+    <h2 class="titre-col" id="t-zone">Zone « Derniers articles » · glisse les cartes pour changer l'ordre</h2>
+    <div class="cadre">
+      <div class="ecran" id="ecran">
+        <h3 class="zone-titre">Derniers articles</h3>
+        <div class="zone" id="zone" aria-label="Articles de l'accueil"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Gestionnaire de mise en page de l'accueil.
+// Pour l'instant : articles d'exemple et mise en page gardée dans ce navigateur.
+// Étape Supabase : lecture de la table articles, écriture dans la table accueil (article_id, position, format).
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var CLE = 'pbz-accueil';
+
+  var ARTICLES = [
+    { id: 'a1', cat: 'Cyclo-cross', titre: 'Récit de la manche de cyclo-cross du week-end', chapo: 'Boue, dépassements et sprint final : le résumé de la course.' },
+    { id: 'a2', cat: 'Route', titre: 'Le calendrier route de la saison prochaine', chapo: 'Toutes les dates des courses de la région, mois par mois.' },
+    { id: 'a3', cat: 'Portrait', titre: "Rencontre avec un jeune coureur du club", chapo: 'Ses débuts, ses entraînements et ses objectifs.' },
+    { id: 'a4', cat: 'VTT', titre: 'Les plus beaux parcours VTT des Ardennes', chapo: 'Cinq boucles testées, de la balade au parcours technique.' },
+    { id: 'a5', cat: 'Cyclo-cross', titre: 'Classement provisoire après quatre manches', chapo: 'Qui mène chez les juniors, les espoirs et les élites.' },
+    { id: 'a6', cat: 'Route', titre: 'Fermeture de routes pour la course de dimanche', chapo: 'Les rues concernées et les horaires de passage.' },
+    { id: 'a7', cat: 'Portrait', titre: "Dans l'atelier d'un mécanicien d'équipe", chapo: 'Ce qu’il prépare avant chaque course.' },
+    { id: 'a8', cat: 'VTT', titre: 'Résultats de la randonnée VTT de novembre', chapo: 'Participation record malgré la pluie.' }
+  ];
+  var FORMATS = [
+    { v: 'petit', n: 'Petit' },
+    { v: 'normal', n: 'Normal' },
+    { v: 'vertical', n: 'Vertical' },
+    { v: 'grand', n: 'Grand' },
+    { v: 'urgent', n: 'Urgent' }
+  ];
+  var DEFAUT = [
+    { id: 'a6', format: 'urgent' },
+    { id: 'a1', format: 'grand' },
+    { id: 'a3', format: 'vertical' },
+    { id: 'a5', format: 'normal' },
+    { id: 'a2', format: 'petit' },
+    { id: 'a4', format: 'petit' }
+  ];
+
+  function parId(id) { return ARTICLES.find(function (a) { return a.id === id; }); }
+  function copie(l) { return l.map(function (x) { return { id: x.id, format: x.format }; }); }
+
+  var publie = copie(DEFAUT);
+  try {
+    var s = JSON.parse(localStorage.getItem(CLE) || 'null');
+    if (Array.isArray(s)) publie = s.filter(function (x) { return parId(x.id); });
+  } catch (e) {}
+  var layout = copie(publie);
+
+  // Les articles urgents restent toujours en haut.
+  function trier() {
+    var urg = layout.filter(function (x) { return x.format === 'urgent'; });
+    var autres = layout.filter(function (x) { return x.format !== 'urgent'; });
+    layout = urg.concat(autres);
+  }
+
+  function etat(msg, ok) { $('etat').textContent = msg; $('etat').classList.toggle('ok', !!ok); }
+  function modifie() {
+    var diff = JSON.stringify(layout) !== JSON.stringify(publie);
+    etat(diff ? 'Modifications non publiées' : 'Aucune modification', false);
+  }
+
+  function el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+
+  function carte(item, i) {
+    var a = parId(item.id);
+    var c = el('article', 'carte f-' + item.format);
+    c.draggable = true;
+    c.dataset.index = i;
+
+    var t = el('div', 'c-texte');
+    if (item.format === 'urgent') t.appendChild(el('span', 'badge', 'Urgent'));
+    t.appendChild(el('span', 'c-cat', a.cat));
+    t.appendChild(el('h4', 'c-titre', a.titre));
+    t.appendChild(el('p', 'c-chapo', a.chapo));
+    c.appendChild(t);
+    c.appendChild(el('div', 'c-img'));
+
+    var o = el('div', 'outils');
+    var avant = el('button', null, '◀');
+    avant.type = 'button'; avant.title = 'Avancer'; avant.setAttribute('aria-label', 'Avancer ' + a.titre);
+    avant.disabled = i === 0;
+    avant.onclick = function () { deplacer(i, i - 1); };
+    var apres = el('button', null, '▶');
+    apres.type = 'button'; apres.title = 'Reculer'; apres.setAttribute('aria-label', 'Reculer ' + a.titre);
+    apres.disabled = i === layout.length - 1;
+    apres.onclick = function () { deplacer(i, i + 1); };
+    var sel = el('select');
+    sel.setAttribute('aria-label', 'Format de ' + a.titre);
+    sel.id = 'format-' + item.id;
+    FORMATS.forEach(function (f) {
+      var op = el('option', null, f.n); op.value = f.v; if (f.v === item.format) op.selected = true; sel.appendChild(op);
+    });
+    sel.onchange = function () { item.format = sel.value; trier(); rendre(); modifie(); };
+    var x = el('button', 'retirer', '✕');
+    x.type = 'button'; x.title = "Retirer de l'accueil"; x.setAttribute('aria-label', "Retirer " + a.titre + " de l'accueil");
+    x.onclick = function () { layout.splice(i, 1); rendre(); modifie(); };
+    [avant, apres, sel, x].forEach(function (b) { o.appendChild(b); });
+    c.appendChild(o);
+
+    // Glisser-déposer entre cartes
+    c.addEventListener('dragstart', function (e) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', 'z:' + i);
+      c.classList.add('drag');
+    });
+    c.addEventListener('dragend', function () { c.classList.remove('drag'); nettoyerMarques(); });
+    c.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      var r = c.getBoundingClientRect();
+      var gauche = (e.clientX - r.left) < r.width / 2;
+      nettoyerMarques();
+      c.classList.add(gauche ? 'avant' : 'apres');
+    });
+    c.addEventListener('dragleave', function () { c.classList.remove('avant', 'apres'); });
+    c.addEventListener('drop', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var r = c.getBoundingClientRect();
+      var cible = (e.clientX - r.left) < r.width / 2 ? i : i + 1;
+      deposer(e.dataTransfer.getData('text/plain'), cible);
+    });
+    return c;
+  }
+
+  function nettoyerMarques() {
+    document.querySelectorAll('.carte.avant, .carte.apres').forEach(function (c) { c.classList.remove('avant', 'apres'); });
+    $('zone').classList.remove('cible');
+  }
+
+  function deplacer(de, vers) {
+    if (vers < 0 || vers >= layout.length) return;
+    var x = layout.splice(de, 1)[0];
+    layout.splice(vers, 0, x);
+    trier(); rendre(); modifie();
+  }
+
+  function deposer(donnee, cible) {
+    nettoyerMarques();
+    if (!donnee) return;
+    if (donnee.indexOf('z:') === 0) {
+      var de = Number(donnee.slice(2));
+      var x = layout.splice(de, 1)[0];
+      if (cible > de) cible--;
+      layout.splice(cible, 0, x);
+    } else if (donnee.indexOf('d:') === 0) {
+      var id = donnee.slice(2);
+      if (layout.some(function (y) { return y.id === id; })) return;
+      layout.splice(cible, 0, { id: id, format: 'normal' });
+    }
+    trier(); rendre(); modifie();
+  }
+
+  function rendre() {
+    var zone = $('zone');
+    zone.textContent = '';
+    if (!layout.length) {
+      zone.appendChild(el('div', 'zone-vide', 'Aucun article sur l’accueil. Ajoute-en depuis la liste « Articles disponibles ».'));
+    }
+    layout.forEach(function (item, i) { zone.appendChild(carte(item, i)); });
+
+    var liste = $('dispo');
+    liste.textContent = '';
+    var dispo = ARTICLES.filter(function (a) { return !layout.some(function (y) { return y.id === a.id; }); });
+    if (!dispo.length) liste.appendChild(el('li', 'vide-liste', 'Tous les articles sont sur l’accueil.'));
+    dispo.forEach(function (a) {
+      var li = el('li', 'dispo-item');
+      li.draggable = true;
+      var t = el('div', 'dispo-texte');
+      t.appendChild(el('span', null, a.cat));
+      t.appendChild(el('strong', null, a.titre));
+      var b = el('button', 'ajouter', '+');
+      b.type = 'button'; b.title = "Ajouter à l'accueil"; b.setAttribute('aria-label', 'Ajouter ' + a.titre + " à l'accueil");
+      b.onclick = function () { layout.push({ id: a.id, format: 'normal' }); trier(); rendre(); modifie(); };
+      li.appendChild(t); li.appendChild(b);
+      li.addEventListener('dragstart', function (e) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'd:' + a.id); });
+      liste.appendChild(li);
+    });
+  }
+
+  // Dépôt dans la zone vide (fin de liste)
+  var zone = $('zone');
+  zone.addEventListener('dragover', function (e) { e.preventDefault(); zone.classList.add('cible'); });
+  zone.addEventListener('dragleave', function (e) { if (e.target === zone) zone.classList.remove('cible'); });
+  zone.addEventListener('drop', function (e) { e.preventDefault(); deposer(e.dataTransfer.getData('text/plain'), layout.length); });
+
+  // Aperçu ordi / téléphone
+  function vue(tel) {
+    $('ecran').classList.toggle('tel', tel);
+    $('vue-tel').setAttribute('aria-pressed', String(tel));
+    $('vue-ordi').setAttribute('aria-pressed', String(!tel));
+  }
+  $('vue-ordi').onclick = function () { vue(false); };
+  $('vue-tel').onclick = function () { vue(true); };
+
+  $('btn-annuler').onclick = function () { layout = copie(publie); rendre(); modifie(); };
+  $('btn-publier').onclick = function () {
+    publie = copie(layout);
+    try { localStorage.setItem(CLE, JSON.stringify(publie)); } catch (e) {}
+    var d = new Date();
+    etat('Mise en page publiée à ' + String(d.getHours()).padStart(2, '0') + 'h' + String(d.getMinutes()).padStart(2, '0') + ' (dans ce navigateur)', true);
+  };
+
+  trier();
+  rendre();
+})();
+</script>
+
+</body>
+</html>
