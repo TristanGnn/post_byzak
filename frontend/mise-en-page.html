@@ -16,16 +16,18 @@
   --line: #cfcfcf;
   --urgent: #c8161d;
   --ok: #1e7a46;
+  --actif: #e86a00;
+  --actif-fond: #fff1e5;
   --font: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --urgent: #ff4d55; --ok: #5cc98a;
+    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --urgent: #ff4d55; --ok: #5cc98a; --actif: #ff9a3c; --actif-fond: #3a2412;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --urgent: #ff4d55; --ok: #5cc98a;
+  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --urgent: #ff4d55; --ok: #5cc98a; --actif: #ff9a3c; --actif-fond: #3a2412;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -108,6 +110,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .poignee { position: absolute; top: 8px; left: 8px; z-index: 2; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-size: 1rem; line-height: 1; }
 .carte:hover .poignee { color: var(--fg); border-color: var(--fg); }
 .zone .dispo-item { grid-column: span 2; }
+.carte.actif { border-color: var(--actif); background: var(--actif-fond); box-shadow: 0 0 0 3px var(--actif); }
+.carte.actif .poignee { background: var(--actif); border-color: var(--actif); color: #ffffff; }
+.carte.actif .c-cat { color: var(--actif); }
 body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
 .c-texte { display: grid; gap: 6px; align-content: start; padding: 14px 16px 16px; }
 .c-cat { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
@@ -251,6 +256,7 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
     if (Array.isArray(s)) publie = s.filter(function (x) { return parId(x.id); });
   } catch (e) {}
   var layout = copie(publie);
+  var actifId = null; // dernière carte cliquée ou déplacée
 
   // Les articles urgents restent toujours en haut.
   function trier() {
@@ -274,7 +280,8 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
 
   function carte(item, i) {
     var a = parId(item.id);
-    var c = el('article', 'carte f-' + item.format);
+    var c = el('article', 'carte f-' + item.format + (item.id === actifId ? ' actif' : ''));
+    c.addEventListener('pointerdown', function () { marquer(item.id); });
 
     var t = el('div', 'c-texte');
     if (item.format === 'urgent') t.appendChild(el('span', 'badge', 'Urgent'));
@@ -299,7 +306,7 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
     FORMATS.forEach(function (f) {
       var op = el('option', null, f.n); op.value = f.v; if (f.v === item.format) op.selected = true; sel.appendChild(op);
     });
-    sel.onchange = function () { item.format = sel.value; trier(); rendre(); modifie(); };
+    sel.onchange = function () { item.format = sel.value; actifId = item.id; trier(); rendre(); modifie(); montrer(); };
     var x = el('button', 'retirer', '✕');
     x.type = 'button'; x.title = "Retirer de l'accueil"; x.setAttribute('aria-label', "Retirer " + a.titre + " de l'accueil");
     x.onclick = function () { layout.splice(i, 1); rendre(); modifie(); };
@@ -311,11 +318,23 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
     return c;
   }
 
+  function marquer(id) {
+    actifId = id;
+    document.querySelectorAll('.carte.actif').forEach(function (c) { if (c.dataset.id !== id) c.classList.remove('actif'); });
+    var c = document.querySelector('.carte[data-id="' + id + '"]');
+    if (c) c.classList.add('actif');
+  }
+  function montrer() {
+    var c = document.querySelector('.carte.actif');
+    if (c && c.scrollIntoView) c.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+
   function deplacer(de, vers) {
     if (vers < 0 || vers >= layout.length) return;
     var x = layout.splice(de, 1)[0];
     layout.splice(vers, 0, x);
-    trier(); rendre(); modifie();
+    actifId = x.id;
+    trier(); rendre(); modifie(); montrer();
   }
 
 
@@ -339,7 +358,7 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
       t.appendChild(el('strong', null, a.titre));
       var b = el('button', 'ajouter', '+');
       b.type = 'button'; b.title = "Ajouter à l'accueil"; b.setAttribute('aria-label', 'Ajouter ' + a.titre + " à l'accueil");
-      b.onclick = function () { layout.push({ id: a.id, format: 'normal' }); trier(); rendre(); modifie(); };
+      b.onclick = function () { layout.push({ id: a.id, format: 'normal' }); actifId = a.id; trier(); rendre(); modifie(); montrer(); };
       li.appendChild(t); li.appendChild(b);
       liste.appendChild(li);
     });
@@ -367,9 +386,10 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
     draggable: '.carte',
     onEnd: function (e) {
       document.body.classList.remove('glisse');
-      if (e.oldIndex === e.newIndex) return;
+      if (e.oldIndex === e.newIndex) { marquer(e.item.dataset.id); return; }
       var x = layout.splice(e.oldIndex, 1)[0];
       layout.splice(e.newIndex, 0, x);
+      actifId = x.id;
       trier(); rendre(); modifie();
     },
     onAdd: function (e) {
@@ -378,6 +398,7 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
       if (!layout.some(function (y) { return y.id === id; })) {
         layout.splice(Math.min(e.newIndex, layout.length), 0, { id: id, format: 'normal' });
       }
+      actifId = id;
       trier(); rendre(); modifie();
     }
   }));
