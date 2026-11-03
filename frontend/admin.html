@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Éditeur – Post_byZak</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
+<style>
+/* Layout : éditeur d'article — formulaire à gauche (infos, image, texte), aperçu en direct à droite au style de article.html ; empilé sur téléphone */
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #666666;
+  --grey: #c4c4c4;
+  --soft: #f1f1f1;
+  --line: #cfcfcf;
+  --ok: #1e7a46;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --ok: #5cc98a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --ok: #5cc98a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; }
+img { max-width: 100%; }
+a { color: var(--fg); }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+/* Barre du haut */
+.barre {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 11; background: var(--bg); }
+.barre-in {
+  max-width: 1400px; margin: 0 auto; padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.barre h1 { margin: 0; font-size: 1.1rem; }
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.etat { font-size: 0.85rem; color: var(--muted); }
+.etat.ok { color: var(--ok); }
+.btn {
+  font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  border-radius: 999px; padding: 9px 18px; border: 2px solid var(--fg); background: transparent; color: var(--fg);
+}
+.btn.plein { background: var(--fg); color: var(--bg); }
+
+/* Mise en page */
+.page {
+  max-width: 1400px; margin: 0 auto; padding-block: 24px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start;
+}
+.panneau-titre { margin: 0 0 12px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+
+/* Formulaire */
+form { display: grid; gap: 18px; }
+.groupe { border: 2px solid var(--line); border-radius: 20px; padding: 18px; display: grid; gap: 14px; margin: 0; min-width: 0; }
+.groupe legend { padding: 0 6px; font-weight: 700; }
+.champ { display: grid; gap: 6px; min-width: 0; }
+.champ label { font-size: 0.9rem; font-weight: 600; }
+.aide { font-size: 0.8rem; color: var(--muted); }
+input[type="text"], input[type="datetime-local"], select, textarea {
+  font: inherit; color: var(--fg); background: var(--bg);
+  border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; width: 100%;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--fg); outline: none; }
+textarea { resize: vertical; min-height: 72px; }
+.ligne { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.compteur { font-size: 0.8rem; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.slug { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
+
+.depot {
+  display: grid; place-items: center; text-align: center; gap: 6px; cursor: pointer;
+  border: 2px dashed var(--line); border-radius: 14px; padding: 20px; color: var(--muted); font-size: 0.9rem;
+  aspect-ratio: 3/1; background-size: cover; background-position: center;
+}
+.depot:hover, .depot.survol { border-color: var(--fg); }
+.depot.rempli { color: transparent; border-style: solid; aspect-ratio: 3/2; }
+.depot input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+/* Quill */
+.editeur-wrap { display: grid; min-width: 0; }
+.ql-toolbar.ql-snow { border: 2px solid var(--line); border-bottom: 0; border-radius: 12px 12px 0 0; background: var(--soft); }
+.ql-container.ql-snow { border: 2px solid var(--line); border-radius: 0 0 12px 12px; font-family: var(--font); font-size: 1rem; }
+.ql-editor { min-height: 280px; line-height: 1.6; color: var(--fg); }
+.ql-editor.ql-blank::before { color: var(--muted); font-style: normal; }
+.ql-snow .ql-stroke { stroke: var(--fg); }
+.ql-snow .ql-fill { fill: var(--fg); }
+.ql-snow .ql-picker { color: var(--fg); }
+.ql-snow .ql-picker-options { background: var(--bg); }
+.ql-snow .ql-tooltip { background: var(--bg); color: var(--fg); border-color: var(--line); box-shadow: none; }
+.ql-snow .ql-tooltip input[type="text"] { color: var(--fg); background: var(--bg); border-color: var(--line); }
+
+/* Aperçu (même style que article.html) */
+.apercu-col { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 72px); max-height: calc(100vh - 96px); overflow: auto; }
+.apercu { border: 2px solid var(--line); border-radius: 20px; padding: 28px 24px; font-size: 17px; display: grid; gap: 18px; }
+.apercu .cat { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.apercu h2.titre { margin: 0; font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.15; text-wrap: balance; }
+.apercu .chapo { margin: 0; font-size: 1.15rem; line-height: 1.45; color: var(--muted); }
+.vide { color: var(--grey); }
+.auteur { display: flex; align-items: center; gap: 14px; }
+.avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--grey); flex: none; }
+.auteur-nom { font-weight: 600; }
+.auteur-nom span { font-weight: 400; color: var(--muted); border-left: 1px solid var(--line); margin-left: 8px; padding-left: 8px; }
+.meta { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.apercu figure { margin: 0; display: grid; gap: 8px; }
+.couverture { background: var(--grey) center / cover no-repeat; aspect-ratio: 3/2; border-radius: 12px; max-width: 100%; }
+.apercu figcaption { font-size: 0.85rem; font-style: italic; color: var(--muted); line-height: 1.4; }
+.contenu { display: grid; gap: 16px; line-height: 1.65; overflow-wrap: anywhere; }
+.contenu > * { margin: 0; }
+.contenu h2, .contenu h3 { margin-top: 8px; font-size: 1.2rem; line-height: 1.35; }
+.contenu blockquote { padding-left: 16px; border-left: 4px solid var(--fg); font-size: 1.1rem; font-style: italic; }
+.contenu img { border-radius: 10px; }
+.statut-badge { justify-self: start; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border-radius: 999px; padding: 4px 10px; border: 2px solid var(--line); color: var(--muted); }
+.statut-badge.publie { border-color: var(--ok); color: var(--ok); }
+
+@media (max-width: 960px) {
+  .page { grid-template-columns: 1fr; }
+  .apercu-col { position: static; max-height: none; overflow: visible; }
+}
+@media (max-width: 520px) {
+  .ligne { grid-template-columns: 1fr; }
+  .apercu { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="barre">
+  <div class="barre-in">
+    <h1>Nouvel article</h1>
+    <div class="actions">
+      <span class="etat" id="etat" aria-live="polite">Brouillon non enregistré</span>
+      <button class="btn" type="button" id="btn-brouillon">Enregistrer le brouillon</button>
+      <button class="btn plein" type="button" id="btn-publier">Publier</button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <section aria-labelledby="t-form">
+    <h2 class="panneau-titre" id="t-form">Rédaction</h2>
+    <form id="form" novalidate>
+
+      <fieldset class="groupe">
+        <legend>Article</legend>
+        <div class="champ">
+          <label for="titre">Titre</label>
+          <input type="text" id="titre" maxlength="140" placeholder="Ex. : Victoire au sprint pour Oscar Loy à Libramont" required>
+          <span class="slug" id="slug">Adresse : /articles/…</span>
+        </div>
+        <div class="champ">
+          <label for="chapo">Chapô</label>
+          <textarea id="chapo" maxlength="300" placeholder="Une ou deux phrases qui résument l'article. Elles s'affichent aussi sur les cartes de l'accueil."></textarea>
+          <span class="compteur" id="compteur-chapo">0 / 300</span>
+        </div>
+        <div class="ligne">
+          <div class="champ">
+            <label for="categorie">Catégorie</label>
+            <select id="categorie">
+              <option>Cyclo-cross</option>
+              <option>Route</option>
+              <option>VTT</option>
+              <option>Portrait</option>
+            </select>
+          </div>
+          <div class="champ">
+            <label for="auteur">Auteur</label>
+            <select id="auteur">
+              <option value="Zak|Rédacteur">Zak · Rédacteur</option>
+              <option value="Invité|Contributeur">Invité · Contributeur</option>
+            </select>
+          </div>
+        </div>
+        <div class="ligne">
+          <div class="champ">
+            <label for="date">Date de publication</label>
+            <input type="datetime-local" id="date">
+            <span class="aide">Une date future programme l'article.</span>
+          </div>
+          <div class="champ">
+            <label for="statut">Statut</label>
+            <select id="statut">
+              <option value="brouillon">Brouillon</option>
+              <option value="publie">Publié</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="groupe">
+        <legend>Photo de couverture</legend>
+        <label class="depot" id="depot" for="image">
+          <input type="file" id="image" accept="image/*">
+          <strong>Choisir une photo</strong>
+          <span>ou la glisser ici · JPG, PNG ou WebP</span>
+        </label>
+        <div class="ligne">
+          <div class="champ">
+            <label for="legende">Légende</label>
+            <input type="text" id="legende" placeholder="Ce qu'on voit, où et quand">
+          </div>
+          <div class="champ">
+            <label for="credit">Crédit</label>
+            <input type="text" id="credit" placeholder="Nom du photographe">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="groupe">
+        <legend>Texte</legend>
+        <div class="editeur-wrap">
+          <div id="editeur"></div>
+        </div>
+        <span class="aide">Intertitre, gras, italique, citation, liste, lien et image. Tu peux aussi coller un texte depuis Word ou Google Docs.</span>
+      </fieldset>
+
+    </form>
+  </section>
+
+  <section class="apercu-col" aria-labelledby="t-apercu">
+    <h2 class="panneau-titre" id="t-apercu">Aperçu</h2>
+    <div class="apercu" id="apercu">
+      <span class="statut-badge" id="a-statut">Brouillon</span>
+      <span class="cat" id="a-cat">Cyclo-cross</span>
+      <h2 class="titre" id="a-titre"><span class="vide">Titre de l'article</span></h2>
+      <p class="chapo" id="a-chapo"><span class="vide">Chapô de l'article</span></p>
+      <div class="auteur">
+        <div class="avatar" aria-hidden="true"></div>
+        <div class="auteur-nom" id="a-auteur">Zak<span>Rédacteur</span></div>
+      </div>
+      <div class="meta" id="a-date">Publié le …</div>
+      <figure>
+        <div class="couverture" id="a-image"></div>
+        <figcaption id="a-legende"></figcaption>
+      </figure>
+      <div class="contenu" id="a-contenu"><p class="vide">Le texte de l'article apparaîtra ici.</p></div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.4.17/dist/purify.min.js"></script>
+<script>
+// Éditeur d'article. Pour l'instant : brouillon gardé dans ce navigateur.
+// Étape suivante : Enregistrer / Publier écriront dans Supabase (table articles).
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var CLE = 'pbz-brouillon';
+  var imageData = '';
+
+  var quill = new Quill('#editeur', {
+    theme: 'snow',
+    placeholder: 'Écris ton article ici…',
+    modules: {
+      toolbar: [
+        [{ header: 2 }, { header: 3 }],
+        ['bold', 'italic'],
+        ['blockquote', { list: 'bullet' }, { list: 'ordered' }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+
+  function slugify(t) {
+    return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+  }
+  function deuxChiffres(n) { return String(n).padStart(2, '0'); }
+  function formatDate(v) {
+    if (!v) return '';
+    var d = new Date(v);
+    if (isNaN(d)) return '';
+    return deuxChiffres(d.getDate()) + '-' + deuxChiffres(d.getMonth() + 1) + '-' + d.getFullYear() +
+      ' à ' + deuxChiffres(d.getHours()) + 'h' + deuxChiffres(d.getMinutes());
+  }
+  function texte(el, valeur, vide) {
+    el.textContent = '';
+    if (valeur) { el.textContent = valeur; }
+    else { var s = document.createElement('span'); s.className = 'vide'; s.textContent = vide; el.appendChild(s); }
+  }
+
+  function maintenantLocal() {
+    var d = new Date(); d.setSeconds(0, 0);
+    return d.getFullYear() + '-' + deuxChiffres(d.getMonth() + 1) + '-' + deuxChiffres(d.getDate()) +
+      'T' + deuxChiffres(d.getHours()) + ':' + deuxChiffres(d.getMinutes());
+  }
+
+  function lire() {
+    return {
+      titre: $('titre').value.trim(),
+      slug: slugify($('titre').value),
+      chapo: $('chapo').value.trim(),
+      categorie: $('categorie').value,
+      auteur: $('auteur').value,
+      date_publication: $('date').value,
+      statut: $('statut').value,
+      legende_image: $('legende').value.trim(),
+      credit_image: $('credit').value.trim(),
+      contenu: quill.getSemanticHTML()
+    };
+  }
+
+  function apercu() {
+    var a = lire();
+    texte($('a-titre'), a.titre, "Titre de l'article");
+    texte($('a-chapo'), a.chapo, "Chapô de l'article");
+    $('a-cat').textContent = a.categorie;
+    var aut = a.auteur.split('|');
+    $('a-auteur').firstChild.nodeValue = aut[0];
+    $('a-auteur').querySelector('span').textContent = aut[1] || '';
+    $('a-date').textContent = 'Publié le ' + (formatDate(a.date_publication) || '…');
+    $('a-statut').textContent = a.statut === 'publie' ? 'Publié' : 'Brouillon';
+    $('a-statut').classList.toggle('publie', a.statut === 'publie');
+    $('slug').textContent = 'Adresse : /articles/' + (a.slug || '…');
+    $('compteur-chapo').textContent = a.chapo.length + ' / 300';
+
+    var leg = a.legende_image + (a.credit_image ? ' ©' + a.credit_image : '');
+    $('a-legende').textContent = leg;
+    $('a-image').style.backgroundImage = imageData ? 'url("' + imageData + '")' : '';
+
+    var vide = quill.getText().trim() === '' && !quill.root.querySelector('img');
+    if (vide) {
+      $('a-contenu').innerHTML = '<p class="vide">Le texte de l\'article apparaîtra ici.</p>';
+    } else {
+      $('a-contenu').innerHTML = DOMPurify.sanitize(a.contenu);
+    }
+  }
+
+  // Image de couverture
+  function chargerImage(fichier) {
+    if (!fichier || !fichier.type.startsWith('image/')) return;
+    var r = new FileReader();
+    r.onload = function () {
+      imageData = r.result;
+      var d = $('depot');
+      d.classList.add('rempli');
+      d.style.backgroundImage = 'url("' + imageData + '")';
+      apercu();
+    };
+    r.readAsDataURL(fichier);
+  }
+  $('image').addEventListener('change', function (e) { chargerImage(e.target.files[0]); });
+  var depot = $('depot');
+  ['dragenter', 'dragover'].forEach(function (t) {
+    depot.addEventListener(t, function (e) { e.preventDefault(); depot.classList.add('survol'); });
+  });
+  ['dragleave', 'drop'].forEach(function (t) {
+    depot.addEventListener(t, function (e) { e.preventDefault(); depot.classList.remove('survol'); });
+  });
+  depot.addEventListener('drop', function (e) { chargerImage(e.dataTransfer.files[0]); });
+
+  // Mises à jour en direct
+  var modifie = false;
+  function changement() {
+    apercu();
+    if (!modifie) { modifie = true; etat('Modifications non enregistrées', false); }
+  }
+  ['titre', 'chapo', 'categorie', 'auteur', 'date', 'statut', 'legende', 'credit'].forEach(function (id) {
+    $(id).addEventListener('input', changement);
+    $(id).addEventListener('change', changement);
+  });
+  quill.on('text-change', changement);
+
+  function etat(msg, ok) {
+    $('etat').textContent = msg;
+    $('etat').classList.toggle('ok', !!ok);
+  }
+  function heure() {
+    var d = new Date();
+    return deuxChiffres(d.getHours()) + 'h' + deuxChiffres(d.getMinutes());
+  }
+
+  // Brouillon (dans ce navigateur, sans la photo)
+  $('btn-brouillon').addEventListener('click', function () {
+    try {
+      localStorage.setItem(CLE, JSON.stringify(lire()));
+      modifie = false;
+      etat('Brouillon enregistré à ' + heure(), true);
+    } catch (e) {
+      etat("Impossible d'enregistrer le brouillon dans ce navigateur", false);
+    }
+  });
+
+  $('btn-publier').addEventListener('click', function () {
+    var a = lire();
+    if (!a.titre) { etat('Ajoute un titre avant de publier', false); $('titre').focus(); return; }
+    $('statut').value = 'publie';
+    apercu();
+    etat('Prêt à publier. La mise en ligne sera active une fois Supabase branché.', false);
+  });
+
+  // Restauration du brouillon
+  $('date').value = maintenantLocal();
+  try {
+    var b = JSON.parse(localStorage.getItem(CLE) || 'null');
+    if (b) {
+      $('titre').value = b.titre || '';
+      $('chapo').value = b.chapo || '';
+      if (b.categorie) $('categorie').value = b.categorie;
+      if (b.auteur) $('auteur').value = b.auteur;
+      if (b.date_publication) $('date').value = b.date_publication;
+      if (b.statut) $('statut').value = b.statut;
+      $('legende').value = b.legende_image || '';
+      $('credit').value = b.credit_image || '';
+      if (b.contenu) quill.clipboard.dangerouslyPasteHTML(DOMPurify.sanitize(b.contenu), 'silent');
+      etat('Brouillon restauré', true);
+    }
+  } catch (e) {}
+
+  apercu();
+})();
+</script>
+
+</body>
+</html>
