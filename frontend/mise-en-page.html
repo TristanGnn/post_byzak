@@ -14,7 +14,7 @@
   --grey: #c4c4c4;
   --soft: #f1f1f1;
   --line: #cfcfcf;
-  --urgent: #c8161d;
+  --danger: #c8161d;
   --ok: #1e7a46;
   --actif: #e86a00;
   --actif-fond: #fff1e5;
@@ -22,12 +22,12 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --urgent: #ff4d55; --ok: #5cc98a; --actif: #ff9a3c; --actif-fond: #3a2412;
+    --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --danger: #ff4d55; --ok: #5cc98a; --actif: #ff9a3c; --actif-fond: #3a2412;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --urgent: #ff4d55; --ok: #5cc98a; --actif: #ff9a3c; --actif-fond: #3a2412;
+  --bg: #141414; --fg: #f0f0f0; --muted: #a0a0a0; --grey: #3a3a3a; --soft: #1f1f1f; --line: #444444; --danger: #ff4d55; --ok: #5cc98a; --actif: #ff9a3c; --actif-fond: #3a2412;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -119,7 +119,6 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
 .c-titre { margin: 0; font-size: 1.05rem; line-height: 1.25; text-wrap: balance; }
 .c-chapo { margin: 0; color: var(--muted); font-size: 0.85rem; line-height: 1.45; }
 .c-img { background: var(--grey); aspect-ratio: 4/3; }
-.badge { justify-self: start; background: var(--urgent); color: #ffffff; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 6px; padding: 3px 8px; }
 
 .f-normal   { grid-column: span 2; }
 .f-petit    { grid-column: span 2; grid-template-rows: 1fr; }
@@ -129,10 +128,6 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
 .f-grand    { grid-column: span 4; grid-row: span 2; }
 .f-grand .c-titre { font-size: 1.6rem; }
 .f-grand .c-img { aspect-ratio: auto; min-height: 240px; height: 100%; }
-.f-urgent   { grid-column: 1 / -1; grid-template-rows: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-color: var(--urgent); }
-.f-urgent .c-texte { align-content: center; padding: 22px 24px; }
-.f-urgent .c-titre { font-size: 1.7rem; }
-.f-urgent .c-img { aspect-ratio: auto; min-height: 200px; }
 
 /* Commandes sur chaque carte */
 .outils {
@@ -144,16 +139,15 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
 .outils button { font: inherit; font-size: 0.85rem; line-height: 1; cursor: pointer; width: 26px; height: 26px; border: 0; border-radius: 50%; background: transparent; color: var(--fg); }
 .outils button:hover { background: var(--soft); }
 .outils button:disabled { opacity: 0.3; cursor: default; }
-.outils .retirer:hover { color: var(--urgent); }
+.outils .retirer:hover { color: var(--danger); }
 
 /* Aperçu téléphone : une seule colonne, même ordre */
 @container ecran (max-width: 600px) {
   .zone { grid-template-columns: 1fr; padding: 10px; gap: 12px; }
-  .carte, .f-urgent { grid-column: 1 / -1; grid-row: auto; }
-  .f-urgent { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .carte { grid-column: 1 / -1; grid-row: auto; }
   .f-vertical .c-img { min-height: 320px; }
-  .f-grand .c-img, .f-urgent .c-img { min-height: 0; aspect-ratio: 4/3; }
-  .f-grand .c-titre, .f-urgent .c-titre { font-size: 1.3rem; }
+  .f-grand .c-img { min-height: 0; aspect-ratio: 4/3; }
+  .f-grand .c-titre { font-size: 1.3rem; }
   .outils select { max-width: 92px; }
 }
 
@@ -197,7 +191,6 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
       <div><b>Normal</b><span>1/3 · texte + photo</span></div>
       <div><b>Vertical</b><span>1/3 · 2 rangées</span></div>
       <div><b>Grand</b><span>2/3 · 2 rangées</span></div>
-      <div><b>Urgent</b><span>pleine largeur · en haut</span></div>
     </div>
   </aside>
 
@@ -235,16 +228,15 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
     { v: 'petit', n: 'Petit' },
     { v: 'normal', n: 'Normal' },
     { v: 'vertical', n: 'Vertical' },
-    { v: 'grand', n: 'Grand' },
-    { v: 'urgent', n: 'Urgent' }
+    { v: 'grand', n: 'Grand' }
   ];
   var DEFAUT = [
-    { id: 'a6', format: 'urgent' },
     { id: 'a1', format: 'grand' },
     { id: 'a3', format: 'vertical' },
     { id: 'a5', format: 'normal' },
     { id: 'a2', format: 'petit' },
-    { id: 'a4', format: 'petit' }
+    { id: 'a4', format: 'petit' },
+    { id: 'a6', format: 'normal' }
   ];
 
   function parId(id) { return ARTICLES.find(function (a) { return a.id === id; }); }
@@ -253,17 +245,12 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
   var publie = copie(DEFAUT);
   try {
     var s = JSON.parse(localStorage.getItem(CLE) || 'null');
-    if (Array.isArray(s)) publie = s.filter(function (x) { return parId(x.id); });
+    if (Array.isArray(s)) publie = s.filter(function (x) { return parId(x.id); }).map(function (x) { return { id: x.id, format: x.format === 'urgent' ? 'grand' : x.format }; });
   } catch (e) {}
   var layout = copie(publie);
   var actifId = null; // dernière carte cliquée ou déplacée
 
-  // Les articles urgents restent toujours en haut.
-  function trier() {
-    var urg = layout.filter(function (x) { return x.format === 'urgent'; });
-    var autres = layout.filter(function (x) { return x.format !== 'urgent'; });
-    layout = urg.concat(autres);
-  }
+  function trier() {}
 
   function etat(msg, ok) { $('etat').textContent = msg; $('etat').classList.toggle('ok', !!ok); }
   function modifie() {
@@ -284,7 +271,6 @@ body.glisse, body.glisse * { cursor: grabbing !important; user-select: none; }
     c.addEventListener('pointerdown', function () { marquer(item.id); });
 
     var t = el('div', 'c-texte');
-    if (item.format === 'urgent') t.appendChild(el('span', 'badge', 'Urgent'));
     t.appendChild(el('span', 'c-cat', a.cat));
     t.appendChild(el('h4', 'c-titre', a.titre));
     t.appendChild(el('p', 'c-chapo', a.chapo));
