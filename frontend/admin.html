@@ -124,6 +124,7 @@ textarea { resize: vertical; min-height: 72px; }
 .contenu h2, .contenu h3 { margin-top: 8px; font-size: 1.2rem; line-height: 1.35; }
 .contenu blockquote { padding-left: 16px; border-left: 4px solid var(--fg); font-size: 1.1rem; font-style: italic; }
 .contenu img { border-radius: 10px; }
+.contenu iframe, .ql-editor iframe.ql-video { width: 100%; aspect-ratio: 16/9; height: auto; border: 0; border-radius: 10px; display: block; }
 .statut-badge { justify-self: start; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border-radius: 999px; padding: 4px 10px; border: 2px solid var(--line); color: var(--muted); }
 .statut-badge.publie { border-color: var(--ok); color: var(--ok); }
 
@@ -225,7 +226,7 @@ textarea { resize: vertical; min-height: 72px; }
         <div class="editeur-wrap">
           <div id="editeur"></div>
         </div>
-        <span class="aide">Intertitre, gras, italique, citation, liste, lien et image. Tu peux aussi coller un texte depuis Word ou Google Docs.</span>
+        <span class="aide">Intertitre, gras, italique, citation, liste, lien, image et vidéo (colle un lien YouTube ou Vimeo). Tu peux aussi coller un texte depuis Word ou Google Docs.</span>
       </fieldset>
 
     </form>
@@ -262,6 +263,21 @@ textarea { resize: vertical; min-height: 72px; }
   var CLE = 'pbz-brouillon';
   var imageData = '';
 
+  // Transforme un lien YouTube ou Vimeo normal en lien d'intégration.
+  function lienVideo(url) {
+    url = (url || '').trim();
+    var m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    if (m) return 'https://www.youtube-nocookie.com/embed/' + m[1];
+    m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    if (m) return 'https://player.vimeo.com/video/' + m[1];
+    return url;
+  }
+  var VideoBase = Quill.import('formats/video');
+  class Video extends VideoBase {
+    static sanitize(url) { return super.sanitize(lienVideo(url)); }
+  }
+  Quill.register(Video, true);
+
   var quill = new Quill('#editeur', {
     theme: 'snow',
     placeholder: 'Écris ton article ici…',
@@ -270,11 +286,22 @@ textarea { resize: vertical; min-height: 72px; }
         [{ header: 2 }, { header: 3 }],
         ['bold', 'italic'],
         ['blockquote', { list: 'bullet' }, { list: 'ordered' }],
-        ['link', 'image'],
+        ['link', 'image', 'video'],
         ['clean']
       ]
     }
   });
+
+  // Nettoyage du HTML : garde les vidéos YouTube et Vimeo, supprime tout autre iframe.
+  var VIDEO_OK = /^https:\/\/(www\.youtube\.com\/embed\/|www\.youtube-nocookie\.com\/embed\/|player\.vimeo\.com\/video\/)/;
+  DOMPurify.addHook('uponSanitizeElement', function (node, data) {
+    if (data.tagName === 'iframe' && !VIDEO_OK.test(node.getAttribute('src') || '')) {
+      node.parentNode && node.parentNode.removeChild(node);
+    }
+  });
+  function nettoyer(html) {
+    return DOMPurify.sanitize(html, { ADD_TAGS: ['iframe'], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder'] });
+  }
 
   function slugify(t) {
     return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -333,11 +360,11 @@ textarea { resize: vertical; min-height: 72px; }
     $('a-legende').textContent = leg;
     $('a-image').style.backgroundImage = imageData ? 'url("' + imageData + '")' : '';
 
-    var vide = quill.getText().trim() === '' && !quill.root.querySelector('img');
+    var vide = quill.getText().trim() === '' && !quill.root.querySelector('img, iframe');
     if (vide) {
       $('a-contenu').innerHTML = '<p class="vide">Le texte de l\'article apparaîtra ici.</p>';
     } else {
-      $('a-contenu').innerHTML = DOMPurify.sanitize(a.contenu);
+      $('a-contenu').innerHTML = nettoyer(a.contenu);
     }
   }
 
@@ -417,7 +444,7 @@ textarea { resize: vertical; min-height: 72px; }
       if (b.statut) $('statut').value = b.statut;
       $('legende').value = b.legende_image || '';
       $('credit').value = b.credit_image || '';
-      if (b.contenu) quill.clipboard.dangerouslyPasteHTML(DOMPurify.sanitize(b.contenu), 'silent');
+      if (b.contenu) quill.clipboard.dangerouslyPasteHTML(nettoyer(b.contenu), 'silent');
       etat('Brouillon restauré', true);
     }
   } catch (e) {}
